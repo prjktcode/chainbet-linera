@@ -1,24 +1,44 @@
 import { useState } from 'react';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SportEvent } from '@/types';
+import { Event } from '@/types';
 import { useWallet } from '@/contexts/WalletContext';
+import { PLACE_BET, PlaceBetData, PlaceBetVariables } from '@/lib/queries';
 import { toast } from 'sonner';
-import { TrendingUp, Wallet } from 'lucide-react';
+import { TrendingUp, Wallet, Loader2 } from 'lucide-react';
 
 interface PlaceBetModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  event: SportEvent;
+  event: Event;
   selectedOutcome: 'home' | 'away' | 'draw';
 }
 
 export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: PlaceBetModalProps) {
   const [amount, setAmount] = useState('');
-  const [isPlacing, setIsPlacing] = useState(false);
-  const { connected, balance } = useWallet();
+  const { isConnected, balance, connect } = useWallet();
+
+  // PlaceBet mutation
+  const [placeBet, { loading: isPlacing }] = useMutation<PlaceBetData, PlaceBetVariables>(PLACE_BET, {
+    onCompleted: (data) => {
+      if (data.placeBet.success) {
+        toast.success('Bet placed successfully!', {
+          description: `${amount} LINERA on ${getOutcomeLabel()} at ${getOdds()}x`,
+        });
+        setAmount('');
+        onOpenChange(false);
+      } else {
+        toast.error(data.placeBet.message || 'Failed to place bet');
+      }
+    },
+    onError: (error) => {
+      console.error('Place bet error:', error);
+      toast.error('Failed to place bet: ' + error.message);
+    },
+  });
 
   const getOutcomeLabel = () => {
     switch (selectedOutcome) {
@@ -28,6 +48,17 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
         return event.awayTeam;
       case 'draw':
         return 'Draw';
+    }
+  };
+
+  const getOutcomeValue = (): string => {
+    switch (selectedOutcome) {
+      case 'home':
+        return 'HOME';
+      case 'away':
+        return 'AWAY';
+      case 'draw':
+        return 'DRAW';
     }
   };
 
@@ -48,8 +79,8 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
   };
 
   const handlePlaceBet = async () => {
-    if (!connected) {
-      toast.error('Please connect your wallet first');
+    if (!isConnected) {
+      connect();
       return;
     }
 
@@ -64,22 +95,16 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
       return;
     }
 
-    setIsPlacing(true);
-    
-    // Mock GraphQL mutation - replace with actual Linera mutation
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast.success('Bet placed successfully!', {
-        description: `${stake} LINERA on ${getOutcomeLabel()} at ${getOdds()}x`,
+      await placeBet({
+        variables: {
+          eventId: event.id,
+          outcome: getOutcomeValue(),
+          amount: stake,
+        },
       });
-      
-      setAmount('');
-      onOpenChange(false);
-    } catch (error) {
-      toast.error('Failed to place bet');
-    } finally {
-      setIsPlacing(false);
+    } catch {
+      // Error handled in onError callback
     }
   };
 
@@ -114,18 +139,20 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
                 className="pr-20"
                 step="0.01"
                 min="0"
+                disabled={!isConnected || isPlacing}
               />
               <Button
                 variant="ghost"
                 size="sm"
                 className="absolute right-1 top-1 h-8"
                 onClick={() => setAmount(balance.toString())}
+                disabled={!isConnected || isPlacing}
               >
                 MAX
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Available: {balance.toFixed(2)} LINERA
+              Available: {isConnected ? balance.toFixed(2) : '0.00'} LINERA
             </p>
           </div>
 
@@ -149,15 +176,18 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
             className="w-full"
             size="lg"
             onClick={handlePlaceBet}
-            disabled={!connected || isPlacing || !amount}
+            disabled={isPlacing || (isConnected && !amount)}
           >
-            {!connected ? (
+            {!isConnected ? (
               <>
                 <Wallet className="h-4 w-4" />
-                Connect Wallet
+                Connect Wallet to Bet
               </>
             ) : isPlacing ? (
-              'Placing Bet...'
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Placing Bet...
+              </>
             ) : (
               <>
                 <TrendingUp className="h-4 w-4" />
@@ -165,6 +195,12 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
               </>
             )}
           </Button>
+
+          {!isConnected && (
+            <p className="text-xs text-center text-muted-foreground">
+              Connect your Linera wallet to place bets
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

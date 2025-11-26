@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Calendar, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SportEvent } from '@/types';
+import { Event } from '@/types';
 import { PlaceBetModal } from './PlaceBetModal';
 import { motion } from 'framer-motion';
 
 interface EventCardProps {
-  event: SportEvent;
+  event: Event;
 }
 
 export function EventCard({ event }: EventCardProps) {

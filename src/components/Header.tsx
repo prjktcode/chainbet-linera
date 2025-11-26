@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Wallet, TrendingUp } from 'lucide-react';
+import { Wallet, TrendingUp, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/contexts/WalletContext';
 import logo from '@/assets/chainbet-logo.png';
 
 export function Header() {
-  const { connected, address, balance, connect, disconnect } = useWallet();
+  const { isConnected, isConnecting, accountId, balance, connect, disconnect } = useWallet();
   const location = useLocation();
 
   const formatAddress = (addr: string) => {
@@ -57,7 +57,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {connected ? (
+            {isConnected ? (
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-xs text-muted-foreground">Balance</span>
@@ -65,13 +65,22 @@ export function Header() {
                 </div>
                 <Button variant="outline" size="sm" onClick={disconnect}>
                   <Wallet className="h-4 w-4" />
-                  <span className="hidden sm:inline">{formatAddress(address!)}</span>
+                  <span className="hidden sm:inline">{formatAddress(accountId!)}</span>
                 </Button>
               </div>
             ) : (
-              <Button size="sm" onClick={connect}>
-                <Wallet className="h-4 w-4" />
-                Connect Wallet
+              <Button size="sm" onClick={connect} disabled={isConnecting}>
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="h-4 w-4" />
+                    Connect Wallet
+                  </>
+                )}
               </Button>
             )}
           </div>
