@@ -18,8 +18,31 @@ let walletConnectModal: WalletConnectModal | null = null;
 if (projectId) {
   walletConnectModal = new WalletConnectModal({
     projectId,
-    chains: ['eip155:1'], // Ethereum mainnet as placeholder
+    // TODO: Update to Linera chain ID when available
+    chains: ['eip155:1'], // Ethereum mainnet as placeholder for WalletConnect compatibility
   });
+}
+
+/**
+ * Extracts address from CAIP-10 format (e.g., "eip155:1:0x...")
+ * Returns null if the format is invalid
+ */
+function extractAddressFromCAIP10(caip10Account: string): string | null {
+  if (!caip10Account || typeof caip10Account !== 'string') {
+    return null;
+  }
+  const parts = caip10Account.split(':');
+  // CAIP-10 format should have at least 3 parts: namespace:chainId:address
+  if (parts.length < 3) {
+    console.warn('Invalid CAIP-10 format:', caip10Account);
+    return null;
+  }
+  const address = parts[2];
+  if (!address) {
+    console.warn('No address found in CAIP-10 account:', caip10Account);
+    return null;
+  }
+  return address;
 }
 
 export function WalletProvider({ children }: { children: ReactNode }) {
@@ -61,13 +84,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           setSession(existingSession);
           const accounts = existingSession.namespaces.eip155?.accounts || [];
           if (accounts.length > 0) {
-            // Extract address from CAIP-10 format (e.g., "eip155:1:0x...")
-            const address = accounts[0].split(':')[2];
-            setWallet({
-              connected: true,
-              address,
-              balance: 0, // Balance would be fetched from chain
-            });
+            const address = extractAddressFromCAIP10(accounts[0]);
+            if (address) {
+              setWallet({
+                connected: true,
+                address,
+                balance: 0, // Balance would be fetched from chain
+              });
+            }
           }
         }
       } catch (error) {
@@ -105,13 +129,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
       const accounts = newSession.namespaces.eip155?.accounts || [];
       if (accounts.length > 0) {
-        // Extract address from CAIP-10 format
-        const address = accounts[0].split(':')[2];
-        setWallet({
-          connected: true,
-          address,
-          balance: 0,
-        });
+        const address = extractAddressFromCAIP10(accounts[0]);
+        if (address) {
+          setWallet({
+            connected: true,
+            address,
+            balance: 0,
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
