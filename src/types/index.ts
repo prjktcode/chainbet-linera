@@ -1,6 +1,11 @@
+// Supported competition types
+// TODO: Confirm ECL mapping - currently assumed to be Europa League
+export type Competition = 'NBA' | 'EPL' | 'UCL' | 'UECL' | 'ECL';
+
 export interface SportEvent {
   id: string;
   sport: string;
+  competition?: Competition;
   homeTeam: string;
   awayTeam: string;
   startTime: string;
@@ -27,4 +32,10 @@ export interface WalletState {
   connected: boolean;
   address: string | null;
   balance: number;
+}
+
+// New wallet context interface for WalletConnect integration
+export interface WalletContextState {
+  accountId: string | null;
+  isConnected: boolean;
 }
