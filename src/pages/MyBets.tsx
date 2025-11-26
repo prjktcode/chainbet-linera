@@ -209,7 +209,7 @@ const MyBets = () => {
                 className="gradient-card p-6 rounded-lg border border-border/50"
               >
                 <p className="text-sm text-muted-foreground mb-1">Total Staked</p>
-                <p className="text-2xl font-bold">{totalStaked.toFixed(2)} LINERA</p>
+                <p className="text-2xl font-bold">{(totalStaked || 0).toFixed(2)} LINERA</p>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -218,7 +218,7 @@ const MyBets = () => {
                 className="gradient-card p-6 rounded-lg border border-border/50"
               >
                 <p className="text-sm text-muted-foreground mb-1">Total Won</p>
-                <p className="text-2xl font-bold text-success">{totalWon.toFixed(2)} LINERA</p>
+                <p className="text-2xl font-bold text-success">{(totalWon || 0).toFixed(2)} LINERA</p>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -227,7 +227,7 @@ const MyBets = () => {
                 className="gradient-card p-6 rounded-lg border border-border/50"
               >
                 <p className="text-sm text-muted-foreground mb-1">Total Lost</p>
-                <p className="text-2xl font-bold text-destructive">{totalLost.toFixed(2)} LINERA</p>
+                <p className="text-2xl font-bold text-destructive">{(totalLost || 0).toFixed(2)} LINERA</p>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -236,8 +236,8 @@ const MyBets = () => {
                 className="gradient-card p-6 rounded-lg border border-border/50"
               >
                 <p className="text-sm text-muted-foreground mb-1">Net Profit</p>
-                <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {netProfit >= 0 ? '+' : ''}{netProfit.toFixed(2)} LINERA
+                <p className={`text-2xl font-bold ${(netProfit || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {(netProfit || 0) >= 0 ? '+' : ''}{(netProfit || 0).toFixed(2)} LINERA
                 </p>
               </motion.div>
             </div>

@@ -77,9 +77,10 @@ export function isAllowedEvent(event: {
     }
   }
 
-  // If no league field and no keyword match, allow Soccer and Basketball events
-  // from the specific sports as a permissive fallback
-  if (eventSport === 'soccer' || eventSport === 'basketball') {
+  // If no league field and no keyword match, allow events from supported sports
+  // as a permissive fallback (derived from LEAGUE_SPORT_MAP values)
+  const fallbackAllowedSports = [...new Set(Object.values(LEAGUE_SPORT_MAP))].map(s => s.toLowerCase());
+  if (fallbackAllowedSports.includes(eventSport)) {
     return true;
   }
 

@@ -112,12 +112,12 @@ export function PlaceBetModal({ open, onOpenChange, event, selectedOutcome }: Pl
         });
       }
     } catch (error) {
-      // If GraphQL mutation fails, show mock success for demo purposes
-      console.warn('GraphQL mutation failed, showing mock success:', error);
+      // If GraphQL mutation fails, show demo mode success with clear indication
+      // This allows testing the UI flow without a backend
+      console.warn('GraphQL mutation failed (demo mode):', error);
       
-      // Simulate successful bet for demo when backend is unavailable
-      toast.success('Bet placed successfully!', {
-        description: `${stake} LINERA on ${getOutcomeLabel()} at ${getOdds()}x`,
+      toast.success('Demo: Bet placed!', {
+        description: `${stake} LINERA on ${getOutcomeLabel()} at ${getOdds()}x (demo mode - no backend connected)`,
       });
       
       setAmount('');

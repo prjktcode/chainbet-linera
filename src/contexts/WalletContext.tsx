@@ -36,6 +36,10 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 const PROJECT_ID = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || '';
 const WC_NAMESPACE = import.meta.env.VITE_WC_NAMESPACE || 'linera';
 
+// Mock address for development when WalletConnect is not configured
+// This is used only for demo purposes when PROJECT_ID is not set
+const MOCK_DEV_ADDRESS = 'e476187f6ddfeb9d588c7b45d3df334d5501d6499b3f9ad5595cae86cce16a65';
+
 // Determine chain ID based on namespace
 const getChainConfig = () => {
   if (WC_NAMESPACE === 'linera') {
@@ -144,7 +148,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           controller: '',
           namespaces: {
             [WC_NAMESPACE]: {
-              accounts: [`${WC_NAMESPACE}:mainnet:e476187f6ddfeb9d588c7b45d3df334d5501d6499b3f9ad5595cae86cce16a65`],
+              accounts: [`${WC_NAMESPACE}:mainnet:${MOCK_DEV_ADDRESS}`],
               methods: [],
               events: [],
             },
