@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Calendar, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { SportEvent } from '@/types';
 import { PlaceBetModal } from './PlaceBetModal';
 import { motion } from 'framer-motion';
@@ -34,9 +35,16 @@ export function EventCard({ event }: EventCardProps) {
         <Card className="gradient-card border border-border/50 hover:border-primary/50 transition-all duration-300 overflow-hidden">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                {event.sport}
-              </span>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {event.sport}
+                </Badge>
+                {event.league && (
+                  <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
+                    {event.league}
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 {formatDate(event.startTime)}

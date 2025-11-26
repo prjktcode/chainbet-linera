@@ -50,13 +50,18 @@ export function BetCard({ bet }: BetCardProps) {
         <div className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold">
                   {bet.event.homeTeam} vs {bet.event.awayTeam}
                 </span>
                 <Badge variant="outline" className="text-xs">
                   {bet.event.sport}
                 </Badge>
+                {bet.event.league && (
+                  <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
+                    {bet.event.league}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
@@ -89,7 +94,7 @@ export function BetCard({ bet }: BetCardProps) {
                 {bet.status === 'won' ? 'Payout' : bet.status === 'lost' ? 'Lost' : 'Potential'}
               </p>
               <p className={`font-bold ${bet.status === 'won' ? 'text-success' : bet.status === 'lost' ? 'text-destructive' : 'text-accent'}`}>
-                {bet.payout ? bet.payout : (bet.stake * bet.odds).toFixed(2)} LINERA
+                {bet.payout ? bet.payout.toFixed(2) : (bet.stake * bet.odds).toFixed(2)} LINERA
               </p>
             </div>
           </div>
