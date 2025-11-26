@@ -40,6 +40,20 @@ export function BetCard({ bet }: BetCardProps) {
     });
   };
 
+  // Use event data if available, otherwise show event ID
+  const eventDisplay = bet.event ? (
+    <>
+      <span className="font-semibold">
+        {bet.event.homeTeam} vs {bet.event.awayTeam}
+      </span>
+      <Badge variant="outline" className="text-xs">
+        {bet.event.sport}
+      </Badge>
+    </>
+  ) : (
+    <span className="font-semibold">Event #{bet.eventId}</span>
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -51,12 +65,7 @@ export function BetCard({ bet }: BetCardProps) {
           <div className="flex items-start justify-between mb-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold">
-                  {bet.event.homeTeam} vs {bet.event.awayTeam}
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  {bet.event.sport}
-                </Badge>
+                {eventDisplay}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />

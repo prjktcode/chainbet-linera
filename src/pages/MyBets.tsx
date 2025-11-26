@@ -1,13 +1,16 @@
+import { useMemo } from 'react';
+import { useQuery } from '@apollo/client/react';
 import { Header } from '@/components/Header';
 import { BetCard } from '@/components/BetCard';
-import { Bet } from '@/types';
+import { Bet, Event } from '@/types';
+import { GET_BETS, GetBetsData } from '@/lib/queries';
 import { useWallet } from '@/contexts/WalletContext';
 import { Button } from '@/components/ui/button';
-import { Wallet, TrendingUp } from 'lucide-react';
+import { Wallet, TrendingUp, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Mock data - replace with GraphQL queries
+// Mock data for fallback when GraphQL is unavailable
 const mockBets: Bet[] = [
   {
     id: '1',
@@ -15,6 +18,7 @@ const mockBets: Bet[] = [
     event: {
       id: '1',
       sport: 'Soccer',
+      league: 'Premier League',
       homeTeam: 'Manchester United',
       awayTeam: 'Liverpool',
       startTime: '2025-11-01T19:00:00Z',
@@ -35,6 +39,7 @@ const mockBets: Bet[] = [
     event: {
       id: '2',
       sport: 'Basketball',
+      league: 'NBA',
       homeTeam: 'Lakers',
       awayTeam: 'Warriors',
       startTime: '2025-10-27T20:00:00Z',
@@ -54,35 +59,71 @@ const mockBets: Bet[] = [
     eventId: '3',
     event: {
       id: '3',
-      sport: 'MMA',
-      homeTeam: 'Jon Jones',
-      awayTeam: 'Stipe Miocic',
+      sport: 'Soccer',
+      league: 'UEFA Champions League',
+      homeTeam: 'Real Madrid',
+      awayTeam: 'Barcelona',
       startTime: '2025-10-26T22:00:00Z',
       status: 'finished',
-      homeOdds: 1.5,
-      awayOdds: 3.5,
+      homeOdds: 2.2,
+      awayOdds: 3.1,
+      drawOdds: 3.5,
     },
-    outcome: 'Stipe Miocic',
-    odds: 3.5,
+    outcome: 'Barcelona',
+    odds: 3.1,
     stake: 25,
     status: 'lost',
     placedAt: '2025-10-26T20:00:00Z',
   },
 ];
 
+// Helper to create a placeholder event for bets without event data
+function createPlaceholderEvent(eventId: string): Event {
+  return {
+    id: eventId,
+    sport: 'Unknown',
+    homeTeam: 'Team A',
+    awayTeam: 'Team B',
+    startTime: new Date().toISOString(),
+    status: 'finished',
+    homeOdds: 1.0,
+    awayOdds: 1.0,
+  };
+}
+
 const MyBets = () => {
-  const { connected, connect } = useWallet();
+  const { isConnected, accountId, connect } = useWallet();
 
-  const activeBets = mockBets.filter(bet => bet.status === 'active');
-  const wonBets = mockBets.filter(bet => bet.status === 'won');
-  const lostBets = mockBets.filter(bet => bet.status === 'lost');
+  // Fetch bets from GraphQL
+  const { data, loading, error } = useQuery<GetBetsData>(GET_BETS, {
+    variables: { accountId: accountId || '' },
+    skip: !accountId,
+    fetchPolicy: 'cache-and-network',
+  });
 
-  const totalStaked = mockBets.reduce((sum, bet) => sum + bet.stake, 0);
+  // Transform fetched bets to include event data (or use mock data)
+  const bets = useMemo(() => {
+    if (data?.bets) {
+      // Map GraphQL bets to include event placeholder
+      return data.bets.map(bet => ({
+        ...bet,
+        event: createPlaceholderEvent(bet.eventId),
+      }));
+    }
+    // Fallback to mock data if no data from GraphQL
+    return mockBets;
+  }, [data]);
+
+  const activeBets = bets.filter(bet => bet.status === 'active');
+  const wonBets = bets.filter(bet => bet.status === 'won');
+  const lostBets = bets.filter(bet => bet.status === 'lost');
+
+  const totalStaked = bets.reduce((sum, bet) => sum + bet.stake, 0);
   const totalWon = wonBets.reduce((sum, bet) => sum + (bet.payout || 0), 0);
   const totalLost = lostBets.reduce((sum, bet) => sum + bet.stake, 0);
   const netProfit = totalWon - totalLost;
 
-  if (!connected) {
+  if (!isConnected) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -168,16 +209,29 @@ const MyBets = () => {
           </motion.div>
         </div>
 
+        {loading && !data && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading bets...</span>
+          </div>
+        )}
+
+        {error && !data && (
+          <div className="text-center py-4 text-muted-foreground text-sm">
+            Unable to fetch bets from chain. Showing demo data.
+          </div>
+        )}
+
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList className="bg-secondary">
-            <TabsTrigger value="all">All Bets ({mockBets.length})</TabsTrigger>
+            <TabsTrigger value="all">All Bets ({bets.length})</TabsTrigger>
             <TabsTrigger value="active">Active ({activeBets.length})</TabsTrigger>
             <TabsTrigger value="won">Won ({wonBets.length})</TabsTrigger>
             <TabsTrigger value="lost">Lost ({lostBets.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            {mockBets.map((bet, index) => (
+            {bets.map((bet, index) => (
               <motion.div
                 key={bet.id}
                 initial={{ opacity: 0, x: -20 }}
